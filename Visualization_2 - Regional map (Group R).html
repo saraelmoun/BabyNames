@@ -39,18 +39,18 @@ input[type=search]::placeholder{color:#56617A}
 .pin small{color:var(--mut);font-family:var(--mono);font-size:10.5px}
 .pin button{background:none;border:0;color:var(--mut);cursor:pointer;font-size:13px;padding:0 0 0 2px}
 #methodo{display:none;margin:8px 0 0;color:#7d8699;font-size:11.5px;line-height:1.6;
-  border-left:2px solid var(--line);padding-left:10px;max-width:1000px}
+  border-left:2px solid var(--line);padding-left:10px;max-width:none}
 .h3s{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);
   font-weight:600;margin:14px 0 4px}
 #ovbox{position:relative}
-#ov{display:block;width:100%;height:235px}
+#ov{display:block;width:100%;height:225px}
 .ovlbl{font-family:var(--mono);font-size:10px;fill:var(--ink);
   paint-order:stroke;stroke:#0D1017;stroke-width:3px}
 .ovleader{stroke:var(--dim);stroke-width:1}
-main{display:grid;grid-template-columns:minmax(420px,560px) 1fr;gap:26px;margin-top:10px;align-items:start}
-#plotbox{position:relative}
-#lorenz{display:block;width:100%;aspect-ratio:1/1.5}
-#gini-def{color:var(--mut);font-size:11.5px;line-height:1.6;margin:2px 0 8px;max-width:1000px;
+main{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:10px;align-items:start}
+#plotbox{position:relative;width:100%}
+#lorenz{display:block;width:100%;height:450px}
+#gini-def{color:var(--mut);font-size:11.5px;line-height:1.6;margin:2px 0 8px;max-width:none;
   border-left:2px solid var(--line);padding-left:10px}
 #gini-def b{color:var(--ink);font-family:var(--disp);font-style:italic}
 .axis text{font-family:var(--mono);font-size:10px;fill:var(--mut)}
@@ -77,14 +77,16 @@ aside h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(
 .drow small{color:var(--mut);font-family:var(--mono);font-size:10.5px;margin-left:8px}
 #aside-hint{color:var(--mut);font-size:12.5px;line-height:1.6}
 /* ---- choropleth map ---- */
-#mapctl{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+#mapctl{display:flex;align-items:center;gap:10px;margin:0}
+.gcol-head{min-height:58px;display:flex;flex-direction:column;justify-content:flex-end;
+  gap:8px;margin:0 0 8px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .segb{background:var(--panel);border:0;border-right:1px solid var(--line);color:var(--mut);
   font-family:var(--ui);font-size:11.5px;padding:5px 10px;cursor:pointer}
 .segb:last-child{border-right:0}
 .segb[data-active="true"]{background:#1A2336;color:var(--ink)}
 #mapbox{position:relative}
-#map{display:block;width:100%;aspect-ratio:1/1.04}
+#map{display:block;width:100%;height:450px}
 .dept{stroke:var(--bg);stroke-width:.4px;cursor:pointer}
 .dept.nodata{fill:var(--line2)}
 .dept.hi{stroke:var(--ink);stroke-width:1.4px}
@@ -134,7 +136,6 @@ aside h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(
   <svg id="ov" aria-label="Popularity versus geographic concentration"></svg>
   <div id="ovtip"></div>
 </div>
-<div class="h3s">Geographic concentration curves</div>
 <p id="gini-def">The <b>Gini index</b> measures how unevenly a name is spread across departments.
   It equals twice the area between the curve and the diagonal: <b>0</b> means the name is
   distributed exactly like the overall population (perfectly uniform), while values approaching
@@ -142,15 +143,18 @@ aside h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(
   diagonal, the higher its Gini index.</p>
 <main>
   <div id="plotbox">
+    <div class="gcol-head"><div class="h3s" style="margin:0">Geographic concentration curves</div></div>
     <svg id="lorenz" aria-label="Geographic concentration curve"></svg>
     <div id="tooltip"></div>
   </div>
   <aside>
-    <h3 id="topdTitle">Geographic representation by department</h3>
-    <div id="mapctl">
-      <div id="mapmetric" class="seg">
-        <button class="segb" data-metric="ratio" data-active="true">Over-representation ×avg</button>
-        <button class="segb" data-metric="share">Share of name %</button>
+    <div class="gcol-head">
+      <h3 id="topdTitle" style="margin:0">Geographic representation by department</h3>
+      <div id="mapctl">
+        <div id="mapmetric" class="seg">
+          <button class="segb" data-metric="ratio" data-active="true">Over-representation ×avg</button>
+          <button class="segb" data-metric="share">Share of name %</button>
+        </div>
       </div>
     </div>
     <div id="mapbox">
@@ -241,7 +245,7 @@ const ovtip = d3.select("#ovtip");
 let ovX = d3.scaleLog(), ovY = d3.scaleLinear(), gOvPts;
 
 function buildOverview() {
-  const w = document.getElementById("ovbox").clientWidth || 980, h = 235;
+  const w = document.getElementById("ovbox").clientWidth || 980, h = 225;
   const m = { l: 56, r: 16, t: 10, b: 32 };
   ov.attr("viewBox", `0 0 ${w} ${h}`).selectAll("*").remove();
   const tmin = names[names.length - 1].t, tmax = names[0].t;
@@ -330,7 +334,7 @@ let gCurves, marker;
 
 function buildPlot() {
   W = document.getElementById("plotbox").clientWidth || 540;
-  const H = Math.round(W * 1.5);
+  const H = document.getElementById("lorenz").clientHeight || Math.round(W * 0.5);
   svg.attr("viewBox", `0 0 ${W} ${H}`).selectAll("*").remove();
   Xs = d3.scaleLinear().domain([0, 1]).range([M.l, W - M.r]);
   Ys = d3.scaleLinear().domain([0, 1]).range([H - M.b, M.t]);
@@ -453,7 +457,7 @@ const idxOf = code => DPTS.indexOf(code);
 
 function buildMap() {
   const Wm = document.getElementById("mapbox").clientWidth || 460;
-  const Hm = Math.round(Wm * 1.04);
+  const Hm = document.getElementById("map").clientHeight || Math.round(Wm * 0.4);
   mapSvg.attr("viewBox", `0 0 ${Wm} ${Hm}`).selectAll("*").remove();
   mapPaths = new Map();
   const topo = JSON.parse(document.getElementById("geo-map").textContent);
@@ -461,7 +465,7 @@ function buildMap() {
   const metro = fc.features.filter(f => !DOM.has(f.properties.code));
   const path = d3.geoPath();
 
-  const insetW = Math.max(58, Wm * 0.17);
+  const insetW = Math.min(160, Math.max(90, Wm * 0.1));
   const proj = d3.geoConicConformal().parallels([44, 49]).rotate([-3, 0])
     .fitExtent([[insetW + 4, 6], [Wm - 4, Hm - 6]], { type: "FeatureCollection", features: metro });
   path.projection(proj);
