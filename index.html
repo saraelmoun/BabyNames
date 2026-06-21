@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cent ans de prénoms français — visualisations</title>
+<style>
+:root{
+  --bg:#0B0E15; --panel:#141A26; --panel2:#1C2433; --line:#2A3548; --dim:#3C4761;
+  --ink:#F0EBDF; --mut:#A4ADC2; --pink:#FF7FA5; --blue:#58B7FF; --amber:#F6B73C; --mint:#4FE0B0;
+  --ui:"Space Grotesk",system-ui,-apple-system,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --disp:Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;color:var(--ink);font-family:var(--ui);-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(70% 50% at 22% -5%, rgba(88,123,205,.20) 0%, rgba(11,14,21,0) 55%),
+    radial-gradient(60% 45% at 90% 0%, rgba(255,127,165,.12) 0%, rgba(11,14,21,0) 55%),
+    var(--bg);
+  background-attachment:fixed;}
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(40px,8vh,90px) clamp(20px,5vw,44px) 60px}
+
+/* ---------- hero ---------- */
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);
+  display:inline-flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:26px;height:1px;background:var(--dim)}
+h1{font-family:var(--disp);font-style:italic;font-weight:600;font-size:clamp(34px,6vw,60px);
+  line-height:1.04;margin:18px 0 0;letter-spacing:.2px;max-width:14ch}
+h1 .grad{background:linear-gradient(92deg,var(--blue),#b39ddb 45%,var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--mut);font-size:clamp(14px,1.5vw,16px);line-height:1.7;max-width:62ch;margin:20px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:8px 10px;margin:24px 0 0}
+.pill{font-family:var(--mono);font-size:11px;color:var(--mut);background:var(--panel2);
+  border:1px solid var(--line);border-radius:20px;padding:6px 12px}
+
+/* ---------- cartes ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:clamp(36px,6vh,56px)}
+.card{position:relative;display:flex;flex-direction:column;text-decoration:none;color:inherit;
+  background:linear-gradient(180deg,#161E2E,#0F1521);border:1px solid var(--line);border-radius:18px;
+  overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.42);
+  transition:transform .28s cubic-bezier(.2,.7,.2,1),box-shadow .28s,border-color .28s}
+.card:hover{transform:translateY(-7px);box-shadow:0 30px 70px rgba(0,0,0,.55);border-color:var(--dim)}
+
+/* zone visuelle abstraite */
+.thumb{aspect-ratio:16/10;position:relative;overflow:hidden}
+.art{position:absolute;inset:0;width:100%;height:100%;display:block;
+  transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.card:hover .art{transform:scale(1.06)}
+.thumb::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(15,21,33,0) 45%,rgba(15,21,33,.9) 100%)}
+.cnum{position:absolute;top:12px;left:14px;z-index:2;font-family:var(--mono);font-size:11px;
+  letter-spacing:.12em;color:var(--ink);background:#0b0e15aa;border:1px solid var(--line);
+  border-radius:7px;padding:4px 8px;backdrop-filter:blur(4px)}
+.tag{position:absolute;top:12px;right:14px;z-index:2;font-family:var(--mono);font-size:10px;
+  letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:20px;border:1px solid}
+
+/* fonds par thème */
+.art-stars{background:
+  radial-gradient(70% 80% at 26% 22%, rgba(88,123,205,.32), rgba(13,18,30,0) 60%),
+  radial-gradient(70% 80% at 82% 86%, rgba(255,127,165,.22), rgba(13,18,30,0) 60%),
+  linear-gradient(180deg,#10172a,#0c1220)}
+.art-region{background:
+  radial-gradient(80% 90% at 50% 42%, rgba(246,183,60,.16), rgba(13,18,30,0) 62%),
+  linear-gradient(180deg,#15182a,#0e1220)}
+.art-waves{background:linear-gradient(180deg,#101a2c,#1a1320)}
+
+/* étoiles */
+.star{transform-box:fill-box;transform-origin:center;
+  animation:tw var(--du,3s) ease-in-out infinite alternate;animation-delay:var(--de,0s)}
+@keyframes tw{from{opacity:.22}to{opacity:1}}
+.links line{stroke:rgba(190,205,255,.16);stroke-width:.22}
+
+/* régions (cartes 02) : contours qui respirent */
+.ring{fill:none;stroke:var(--amber);transform-box:fill-box;transform-origin:center;
+  animation:pulse 6s ease-in-out infinite}
+.ring:nth-child(2){animation-delay:1.4s}.ring:nth-child(3){animation-delay:2.8s}.ring:nth-child(4){animation-delay:4.2s}
+@keyframes pulse{0%,100%{opacity:.18;transform:scale(.96)}50%{opacity:.5;transform:scale(1.05)}}
+.place{fill:var(--amber)}
+.place.b{animation:bl 4s ease-in-out infinite alternate}
+@keyframes bl{from{opacity:.3}to{opacity:.9}}
+
+/* ondes (carte 03) : dualité miroir */
+.wtop{fill:var(--blue);opacity:.82;animation:drA 11s ease-in-out infinite alternate}
+.wbot{fill:var(--pink);opacity:.82;animation:drB 13s ease-in-out infinite alternate}
+@keyframes drA{from{transform:translateX(0)}to{transform:translateX(-16px)}}
+@keyframes drB{from{transform:translateX(-14px)}to{transform:translateX(2px)}}
+
+.cbody{padding:16px 19px 20px;display:flex;flex-direction:column;flex:1}
+.cbody h2{font-family:var(--disp);font-style:italic;font-weight:600;font-size:21px;margin:0;line-height:1.15}
+.cbody p{color:var(--mut);font-size:13px;line-height:1.6;margin:9px 0 0;flex:1}
+.go{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:13px;font-weight:600;color:var(--ink)}
+.go i{font-style:normal;transition:transform .25s}
+.card:hover .go i{transform:translateX(5px)}
+.card.c1 .go{color:var(--blue)} .card.c1 .tag{color:var(--blue);border-color:#2c4a66}
+.card.c2 .go{color:var(--amber)} .card.c2 .tag{color:var(--amber);border-color:#5c4a1f}
+.card.c3 .go{color:var(--mint)} .card.c3 .tag{color:var(--mint);border-color:#1f5847}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid var(--line);
+  color:#6f7892;font-size:11.5px;line-height:1.7;display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between}
+footer b{color:var(--mut)}
+@media (max-width:860px){.cards{grid-template-columns:1fr;max-width:460px;margin-left:auto;margin-right:auto}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">Datavisualisation · IGR204</span>
+    <h1>Cent ans de <span class="grad">prénoms&nbsp;français</span></h1>
+    <p class="lede">Un siècle de naissances, de <b>1900 à 2020</b> (données INSEE), exploré sous
+      trois angles complémentaires : le <b>temps</b>, l'<b>espace</b> et le <b>genre</b>.
+      Trois portes d'entrée — à vous de pousser celle qui vous intrigue.</p>
+    <div class="meta">
+      <span class="pill">INSEE 1900–2020</span>
+      <span class="pill">3 visualisations</span>
+      <span class="pill">D3.js</span>
+    </div>
+  </header>
+
+  <main class="cards">
+    <a class="card c1" href="Visualization_1 - NameVoyager (Group R).html">
+      <div class="thumb art-stars">
+        <svg class="art" viewBox="0 0 100 62" preserveAspectRatio="xMidYMid slice">
+          <g class="links">
+            <line x1="20" y1="14" x2="34" y2="26"/><line x1="34" y1="26" x2="52" y2="20"/>
+            <line x1="52" y1="20" x2="70" y2="34"/><line x1="70" y1="34" x2="84" y2="24"/>
+          </g>
+          <g class="stars"></g>
+        </svg>
+        <span class="cnum">01</span><span class="tag">Le temps</span>
+      </div>
+      <div class="cbody">
+        <h2>La constellation des prénoms</h2>
+        <p>Un siècle de prénoms, comme un ciel à explorer — certains brillent sans relâche,
+           d'autres ne font qu'un éclair. Glissez dans le temps et voyez‑les bouger.</p>
+        <span class="go">Explorer <i>→</i></span>
+      </div>
+    </a>
+
+    <a class="card c2" href="Visualization_2 - Regional map (Group R).html">
+      <div class="thumb art-region">
+        <svg class="art" viewBox="0 0 100 62" preserveAspectRatio="xMidYMid slice">
+          <g transform="translate(50 31)">
+            <circle class="ring" r="9"/><circle class="ring" r="16.5"/>
+            <circle class="ring" r="24"/><circle class="ring" r="31.5"/>
+          </g>
+          <circle class="place" cx="50" cy="31" r="2.3"/>
+          <circle class="place b" cx="28" cy="20" r="1.5"/><circle class="place b" cx="72" cy="22" r="1.5"/>
+          <circle class="place b" cx="33" cy="44" r="1.5"/><circle class="place b" cx="68" cy="42" r="1.5"/>
+          <circle class="place b" cx="50" cy="12" r="1.3"/><circle class="place b" cx="50" cy="50" r="1.3"/>
+        </svg>
+        <span class="cnum">02</span><span class="tag">L'espace</span>
+      </div>
+      <div class="cbody">
+        <h2>La carte régionale</h2>
+        <p>Un prénom n'est pas donné partout pareil. Ici une région le revendique, là il s'efface —
+           la géographie des prénoms se révèle d'un clic.</p>
+        <span class="go">Explorer <i>→</i></span>
+      </div>
+    </a>
+
+    <a class="card c3" href="Visualization_3 - Gender Neutral Name (Group R).html">
+      <div class="thumb art-waves">
+        <svg class="art" viewBox="0 0 100 62" preserveAspectRatio="none">
+          <path class="wtop" d="M-10,0 L116,0 L116,27 C98,22 88,31 73,27 C58,23 48,32 36,28 C24,24 12,31 -10,27 Z"/>
+          <path class="wbot" d="M-10,62 L116,62 L116,35 C98,40 88,31 73,35 C58,39 48,30 36,34 C24,38 12,31 -10,35 Z"/>
+          <line x1="0" y1="31" x2="100" y2="31" stroke="rgba(240,235,223,.25)" stroke-width=".4" stroke-dasharray="2 2"/>
+        </svg>
+        <span class="cnum">03</span><span class="tag">Le genre</span>
+      </div>
+      <div class="cbody">
+        <h2>Prénoms mixtes &amp; genre</h2>
+        <p>Filles d'un côté, garçons de l'autre — et parfois les deux. Quels prénoms basculent,
+           lesquels avancent à l'unisson ? Le partage se dessine.</p>
+        <span class="go">Explorer <i>→</i></span>
+      </div>
+    </a>
+  </main>
+
+  <footer>
+    <span>Source : <b>INSEE</b>, fichier des prénoms, France 1900–2020.</span>
+    <span>Survolez, glissez, cliquez — chaque vue est interactive.</span>
+  </footer>
+</div>
+<script>
+(() => {
+  const NS = "http://www.w3.org/2000/svg";
+  const cols = ["#dbe4ff", "#58B7FF", "#FF7FA5", "#F0EBDF"];
+  document.querySelectorAll(".art-stars .stars").forEach(g => {
+    for (let i = 0; i < 48; i++) {
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", (3 + Math.random() * 94).toFixed(1));
+      c.setAttribute("cy", (3 + Math.random() * 56).toFixed(1));
+      c.setAttribute("r", (0.3 + Math.random() * Math.random() * 2.1).toFixed(2));
+      c.setAttribute("fill", cols[Math.random() * cols.length | 0]);
+      c.setAttribute("class", "star");
+      c.style.setProperty("--du", (2.2 + Math.random() * 3).toFixed(2) + "s");
+      c.style.setProperty("--de", (Math.random() * 4).toFixed(2) + "s");
+      g.appendChild(c);
+    }
+  });
+})();
+</script>
+</body>
+</html>
