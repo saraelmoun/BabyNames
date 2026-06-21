@@ -40,7 +40,7 @@ h1{font-family:var(--disp);font-style:italic;font-weight:600;font-size:23px;marg
 .axis line,.axis path{stroke:var(--line)}
 .gridline{stroke:var(--line2)}
 .axtitle{font-family:var(--ui);font-size:10.5px;fill:var(--mut)}
-.quadlbl{font-family:var(--ui);font-size:12.5px;font-style:italic;font-weight:600;opacity:.85;pointer-events:none}
+.quadlbl{font-family:var(--ui);font-size:12.5px;font-style:italic;font-weight:600;opacity:.92;paint-order:stroke;stroke:#0D1017;stroke-width:3.5px;pointer-events:none}
 .handle{cursor:ew-resize}
 .handle circle{fill:#0D1017;stroke:var(--amber);stroke-width:1.5}
 .handle text{font-family:var(--mono);font-size:11px;fill:var(--amber)}
@@ -74,6 +74,10 @@ aside .card{background:var(--panel);border:1px solid var(--line);border-radius:1
 #freq,#corr{display:block;width:100%}
 #freq{height:270px}
 #corr{height:190px;margin-top:10px}
+.dtip{position:fixed;pointer-events:none;background:#121826EE;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12px;color:var(--mut);box-shadow:0 6px 20px #0008;display:none;z-index:9}
+.dtip .yr{color:var(--ink);font-family:var(--disp);font-style:italic;margin-bottom:2px}
+.dtip .tt-row{display:flex;justify-content:space-between;gap:14px}
+.dtip b{color:var(--ink);font-family:var(--mono)}
 #detail{display:flex;flex-direction:column}
 @media (max-width:980px){.grid2{grid-template-columns:1fr}}
 </style>
@@ -84,7 +88,7 @@ aside .card{background:var(--panel);border:1px solid var(--line);border-radius:1
   <h1>Gender-neutral names</h1>
   <div id="controls">
     <label class="jlbl" for="nameSelect">Jump to</label>
-    <select id="nameSelect"><option value="ANAEL">Anael</option><option value="ANDREA">Andrea</option><option value="CAMILLE">Camille</option><option value="CHARLIE">Charlie</option><option value="DANY">Dany</option><option value="DOMINIQUE">Dominique</option><option value="EDEN">Eden</option><option value="GABY">Gaby</option><option value="GEORGE">George</option><option value="IRENEE">Irenee</option><option value="JANICK">Janick</option><option value="JANNICK">Jannick</option><option value="JANY">Jany</option><option value="JEANNICK">Jeannick</option><option value="LOÏS">Loïs</option><option value="LOUISON">Louison</option><option value="MAE">Mae</option><option value="MALEK">Malek</option><option value="NICAISE">Nicaise</option><option value="SASHA">Sasha</option><option value="YAEL">Yael</option><option value="YAËL">Yaël</option><option value="ANAEL">Anael</option><option value="ANDREA">Andrea</option><option value="CAMILLE">Camille</option><option value="CHARLIE">Charlie</option><option value="DANY">Dany</option><option value="DOMINIQUE">Dominique</option><option value="EDEN">Eden</option><option value="GABY">Gaby</option><option value="GEORGE">George</option><option value="IRENEE">Irenee</option><option value="JANICK">Janick</option><option value="JANNICK">Jannick</option><option value="JANY">Jany</option><option value="JEANNICK">Jeannick</option><option value="LOÏS">Loïs</option><option value="LOUISON">Louison</option><option value="MAE">Mae</option><option value="MALEK">Malek</option><option value="NICAISE">Nicaise</option><option value="SASHA">Sasha</option><option value="YAEL">Yael</option><option value="YAËL">Yaël</option></select>
+    <input id="nameSelect" list="nameList" placeholder="type a name…" autocomplete="off"><datalist id="nameList"></datalist>
     <button class="btn" id="infoBtn">Methodology</button>
   </div>
 </header>
@@ -367,7 +371,7 @@ function layoutWindow() {
    Diagonale = parallèle (cohérent) ; coins = bascule de genre. Clic = détail iceberg. */
 const svg = d3.select("#scatter");
 const tooltip = d3.select("#tooltip");
-const M = { l: 58, r: 16, t: 16, b: 50 };
+const M = { l: 58, r: 16, t: 40, b: 80 };
 let W = 540, Xs = d3.scaleSymlog(), Ys = d3.scaleSymlog(), Rsz = d3.scaleSqrt();
 let gPts, gLbl, axX, axY;
 
@@ -385,31 +389,32 @@ function buildScatter() {
     .attr("text-anchor", "middle").text("Change Among Boys - Δ per 100,000 Births");
   svg.append("line").attr("id", "zx").attr("stroke", "var(--dim)").attr("stroke-width", 1);
   svg.append("line").attr("id", "zy").attr("stroke", "var(--dim)").attr("stroke-width", 1);
+  gPts = svg.append("g");
+  gLbl = svg.append("g");
+  const gQuad = svg.append("g");   /* quadrant legends drawn last → always on top of the points */
   /* libellés de quadrant aux 4 coins, placés tout en haut/bas où les points sont rares ;
      les coins "mixtes" (un genre monte, l'autre baisse) sont bicolores : bleu = garçons,
      rose = filles, pour rappeler le code couleur du reste de la viz */
-  svg.append("text").attr("class", "quadlbl").attr("fill", "var(--mint)")
-    .attr("x", W - M.r - 8).attr("y", M.t + 14).attr("text-anchor", "end")
+  gQuad.append("text").attr("class", "quadlbl").attr("fill", "var(--mint)")
+    .attr("x", W - M.r - 8).attr("y", 24).attr("text-anchor", "end")
     .text("Both Increasing ↗");
-  svg.append("text").attr("class", "quadlbl")
-    .attr("x", M.l + 8).attr("y", M.t + 14).attr("text-anchor", "start")
+  gQuad.append("text").attr("class", "quadlbl")
+    .attr("x", M.l + 8).attr("y", 24).attr("text-anchor", "start")
     .call(t => {
       t.append("tspan").attr("fill", "var(--blue)").text("Boys Increasing");
       t.append("tspan").attr("fill", "var(--mut)").text(", ");
       t.append("tspan").attr("fill", "var(--pink)").text("Girls Decreasing");
     });
-  svg.append("text").attr("class", "quadlbl").attr("fill", "var(--mut)")
-    .attr("x", M.l + 8).attr("y", H - M.b - 10).attr("text-anchor", "start")
+  gQuad.append("text").attr("class", "quadlbl").attr("fill", "var(--mut)")
+    .attr("x", M.l + 8).attr("y", H - 44).attr("text-anchor", "start")
     .text("Both Decreasing ↙");
-  svg.append("text").attr("class", "quadlbl")
-    .attr("x", W - M.r - 8).attr("y", H - M.b - 10).attr("text-anchor", "end")
+  gQuad.append("text").attr("class", "quadlbl")
+    .attr("x", W - M.r - 8).attr("y", H - 44).attr("text-anchor", "end")
     .call(t => {
       t.append("tspan").attr("fill", "var(--pink)").text("Girls Increasing");
       t.append("tspan").attr("fill", "var(--mut)").text(", ");
       t.append("tspan").attr("fill", "var(--blue)").text("Boys Decreasing");
     });
-  gPts = svg.append("g");
-  gLbl = svg.append("g");
   drawScatter(0, true);
 }
 
@@ -418,7 +423,7 @@ function drawScatter(dur, first) {
   const dmax = Math.max(10, d3.max(names, nm => Math.max(Math.abs(nm.dM), Math.abs(nm.dF)))) * 1.15;
   Xs = d3.scaleSymlog().constant(6).domain([-dmax, dmax]).range([M.l, W - M.r]);
   Ys = d3.scaleSymlog().constant(6).domain([-dmax, dmax]).range([H - M.b, M.t]);
-  Rsz = d3.scaleSqrt().domain([0, d3.max(names, nm => nm.vol) || 1]).range([4, 17]);
+  Rsz = d3.scaleSqrt().domain([0, d3.max(names, nm => nm.vol) || 1]).range([4, 14]);
   const cand = [1000, 100, 10, 0];
   const tks = [...cand.filter(v => v < dmax).map(v => -v), 0,
                ...cand.filter(v => v < dmax && v > 0).reverse()];
@@ -449,7 +454,7 @@ function drawScatter(dur, first) {
     .attr("fill", nm => pfColor(nm.pf))
     .attr("fill-opacity", 0.85)
     .attr("stroke", nm => nm === selected ? "var(--ink)" : "#0D1017")
-    .attr("stroke-width", nm => nm === selected ? 1.8 : 0.8);
+    .attr("stroke-width", nm => nm === selected ? 1.8 : 1.3);
 
   /* étiquettes : placement anti-chevauchement qui évite les POINTS, les autres étiquettes
      ET les libellés de quadrant ; les gros points sont étiquetés en priorité ; un trait de
@@ -462,9 +467,13 @@ function drawScatter(dur, first) {
     return { x0: x - r, x1: x + r, y0: y - r, y1: y + r };
   });
   const placed = [];
+  /* a point sitting under a larger one is invisible -> we must not label it (no orphan labels) */
+  const buried = [];
   const labd = [];
   for (const nm of [...names].sort((a, b) => b.vol - a.vol)) {
     const x = Xs(nm.dF), y = Ys(nm.dM), r = Rsz(nm.vol), lw = 6.8 * nm.n.length + 2;
+    if (nm !== selected && buried.some(p => Math.hypot(p.x - x, p.y - y) < p.r * 0.9)) { buried.push({ x, y, r }); continue; }
+    buried.push({ x, y, r });
     let chosen = null;
     for (const d of [6, 12, 22]) {
       for (const [dx, dy, anch] of [
@@ -537,9 +546,9 @@ function select(nm) {
   selected = nm;
   gPts.selectAll("circle")
     .attr("stroke", d => d === selected ? "var(--ink)" : "#0D1017")
-    .attr("stroke-width", d => d === selected ? 1.8 : 0.8);
+    .attr("stroke-width", d => d === selected ? 1.8 : 1.3);
   renderDetail(true);
-  if (selectEl) selectEl.value = nm.n;
+  if (selectEl) selectEl.value = cap(nm.n);
 }
 function renderDetail(full) {
   const nm = selected;
@@ -574,6 +583,42 @@ function activeRange(nm) {
   while (b > 0 && (nm.cm[b] + nm.cf[b]) <= 0) b--;
   return a > b ? [0, NY - 1] : [a, b];
 }
+/* hover partagé pour les graphes de détail (iceberg + corrélation) :
+   ligne-guide verticale + points + infobulle avec la valeur de l'année survolée */
+function dtipSel() {
+  let d = d3.select("body").select(".dtip");
+  if (d.empty()) d = d3.select("body").append("div").attr("class", "dtip");
+  return d;
+}
+function chartHover(svg, w, h, m, xS, lo, hi, info) {
+  const dtip = dtipSel();
+  const g = svg.append("g").attr("display", "none").style("pointer-events", "none");
+  const guide = g.append("line").attr("y1", m.t).attr("y2", h - m.b)
+    .attr("stroke", "var(--ink)").attr("stroke-opacity", 0.4).attr("stroke-dasharray", "2 2");
+  const dotG = g.append("g");
+  svg.append("rect").attr("x", m.l).attr("y", m.t)
+    .attr("width", Math.max(0, w - m.l - m.r)).attr("height", Math.max(0, h - m.t - m.b))
+    .attr("fill", "transparent").style("cursor", "crosshair")
+    .on("pointermove", function (ev) {
+      const rect = svg.node().getBoundingClientRect();
+      const mx = (ev.clientX - rect.left) * (w / (rect.width || w));
+      const yr = Math.max(lo, Math.min(hi, Math.round(xS.invert(mx))));
+      const d = info(yr - Y0);
+      if (!d) { g.attr("display", "none"); dtip.style("display", "none"); return; }
+      g.attr("display", null);
+      guide.attr("x1", xS(yr)).attr("x2", xS(yr));
+      const ds = dotG.selectAll("circle").data(d.dots);
+      ds.enter().append("circle").attr("r", 3.5).attr("stroke", "var(--bg)").attr("stroke-width", 1.5)
+        .merge(ds).attr("cx", xS(yr)).attr("cy", p => p.y).attr("fill", p => p.color);
+      ds.exit().remove();
+      dtip.style("display", "block").html(`<div class="yr">${yr}</div>${d.html}`);
+      const tw = dtip.node().offsetWidth, th = dtip.node().offsetHeight;
+      let x = ev.clientX + 14; if (x + tw > innerWidth) x = ev.clientX - tw - 14;
+      let y = ev.clientY + 14; if (y + th > innerHeight) y = ev.clientY - th - 14;
+      dtip.style("left", x + "px").style("top", y + "px");
+    })
+    .on("pointerleave", () => { g.attr("display", "none"); dtip.style("display", "none"); });
+}
 /* iceberg : garçons au-dessus de la ligne, filles en dessous (miroir) */
 function drawFreq(nm) {
   const svgF = d3.select("#freq");
@@ -607,6 +652,14 @@ function drawFreq(nm) {
   svgF.append("text").attr("class", "axtitle").attr("x", w - m.r).attr("y", 12)
     .attr("text-anchor", "end")
     .text(narrow ? "per 100k births" : "frequency per 100,000 births of the same sex · period in amber");
+  chartHover(svgF, w, h, m, xS, Y0 + a0, Y0 + a1, i => {
+    if (i < a0 || i > a1) return null;
+    return {
+      html: `<div class="tt-row"><span style="color:var(--blue)">▲ Boys</span><b>${frFmt.format(Math.round(nm.m[i]))}</b></div>` +
+            `<div class="tt-row"><span style="color:var(--pink)">▼ Girls</span><b>${frFmt.format(Math.round(nm.f[i]))}</b></div>`,
+      dots: [{ y: yS(nm.m[i]), color: "var(--blue)" }, { y: yS(-nm.f[i]), color: "var(--pink)" }]
+    };
+  });
 }
 function drawCorr(nm) {
   const svgC = d3.select("#corr");
@@ -642,6 +695,15 @@ function drawCorr(nm) {
   svgC.append("text").attr("class", "axtitle").attr("x", w - m.r).attr("y", 11)
     .attr("text-anchor", "end").attr("fill", "var(--mint)")
     .text("+1 parallel trends · −1 gender shift");
+  chartHover(svgC, w, h, m, xS, Y0 + a0, Y0 + a1, i => {
+    if (i < a0 || i > a1) return null;
+    const v = roll[i];
+    if (v == null) return { html: `<div class="tt-row"><span style="color:var(--mint)">Correlation</span><b>n/a</b></div>`, dots: [] };
+    return {
+      html: `<div class="tt-row"><span style="color:var(--mint)">Correlation</span><b>${v >= 0 ? "+" : "−"}${fr(Math.abs(v), 2)}</b></div>`,
+      dots: [{ y: yS(v), color: "var(--mint)" }]
+    };
+  });
 }
 
 /* ============================ contrôles & init ============================ */
@@ -664,18 +726,21 @@ buildScatter();
 const nNamesEl = document.getElementById("nNames");
 if (nNamesEl) nNamesEl.textContent = names.length;
 selectEl = document.getElementById("nameSelect");
-if (selectEl) {
+const nameListEl = document.getElementById("nameList");
+if (selectEl && nameListEl) {
   const sortedNames = [...names].sort((a, b) => a.n.localeCompare(b.n));
   for (const nm of sortedNames) {
     const opt = document.createElement("option");
-    opt.value = nm.n;
-    opt.textContent = cap(nm.n);
-    selectEl.appendChild(opt);
+    opt.value = cap(nm.n);
+    nameListEl.appendChild(opt);
   }
-  selectEl.addEventListener("change", () => {
-    const nm = names.find(x => x.n === selectEl.value);
+  const pick = () => {
+    const v = selectEl.value.trim().toLowerCase();
+    const nm = names.find(x => cap(x.n).toLowerCase() === v || x.n.toLowerCase() === v);
     if (nm) select(nm);
-  });
+  };
+  selectEl.addEventListener("change", pick);
+  selectEl.addEventListener("input", pick);
 }
 selected = names.find(nm => nm.n === "DOMINIQUE") || names[0];
 select(selected);
